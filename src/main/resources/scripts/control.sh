@@ -120,7 +120,12 @@ case "${CMD}" in
         cat ${DRILL_CONF_DIR}/drill-override.conf
         exit 0 
         ;;
-        
+
+    Client)
+	log "Client. Nothing to do."
+	exit 0
+	;;
+
     *)
         log "Unknown command: ${CMD}"
         exit 1
