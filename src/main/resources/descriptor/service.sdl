@@ -41,16 +41,16 @@
             "configName": "cluster.id",
             "required": "true",
             "type": "string",
-            "default": "drill"
+            "default": "drill1"
         },
         {
             "name": "zk_connect",
             "label": "Zookeeper Quorum URL",
-            "description": "Zookeeper Quorum URL",
+            "description": "Zookeeper Quorum URL. If empty defaults to ${ZK_QUORUM}",
             "configName": "zk.connect",
-            "required": "true",
+            "required": "false",
             "type": "string",
-            "default": "localhost:2181"
+            "default": ""
         },
         {
             "name": "drill_max_direct_memory",
@@ -156,7 +156,7 @@
                     "label": "Deploy",
                     "description": "Deploy Drill configuration",
                     "expectedExitCodes": [ 0 ],
-                    "requiredRoleState": "stopped",
+                    "requiredRoleState": "running",
                     "commandRunner": {
                         "program": "scripts/control.sh",
                         "args": [ "Deploy" ]

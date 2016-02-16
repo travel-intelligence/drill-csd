@@ -2,6 +2,9 @@
 
 date -u +"20%y-%m-%d %H:%M:%S" 1>&2
 
+THIS_SCRIPT=$0
+PROCESS_DIR=$(pwd)
+# PROCESS_DIR=$(dirname ${THIS_SCRIPT})
 CMD=$1
 shift 1
 
@@ -11,13 +14,70 @@ function log {
   echo "${TIMESTAMP} - $1" 1>&2
 }
 
+function setVariable {
+  KEY=$1
+  VALUE=$2
+  DEFAULT_VALUE=$3
+
+  if [ -z "${!KEY}" ]
+  then
+    if [ -z "${VALUE}" ]
+    then
+      VALUE="${DEFAULT_VALUE}"
+    fi
+
+    log "Exporting ${KEY}=${VALUE}"
+    export ${KEY}="${VALUE}"
+  fi
+}
+
+function readConfLine {
+  IFS="=" read key value <<< "$1"
+}
+
+function parseConf {
+  for line in $(cat ${PROCESS_DIR}/drill-conf/drill-cloudera.conf)
+  do
+    readConfLine $line
+    case $key in
+      cluster.id)
+        unset DRILL_CLUSTER_ID
+        setVariable DRILL_CLUSTER_ID "$value" "drill1"
+        ;;
+
+      zk.connect)
+        unset ZK_CONNECT
+        setVariable ZK_CONNECT "$value" "${ZK_QUORUM}"
+        ;;
+
+      drill.max.direct.memory)
+        unset DRILL_MAX_DIRECT_MEMORY
+        setVariable DRILL_MAX_DIRECT_MEMORY "$value" "8G"
+        ;;
+
+      drill.heap)
+        unset DRILL_HEAP
+        setVariable DRILL_HEAP "$value" "4G"
+        ;;
+   
+      drill.log.dir)
+        unset DRILL_LOG_DIR
+        setVariable DRILL_LOG_DIR "$value" "/var/log/drill"
+        ;;
+
+      *)
+        log "Unknown property ${key} with value ${value}"
+        ;;
+    esac
+  done
+}
+
 log "Got command: ${CMD}"
 
 DRILL_CONTROL_SH_DEBUG=1
 if [ "${DRILL_CONTROL_SH_DEBUG}" = "1" ]
 then
-    env | sort
-    pwd
+    env | sort 1>&2
 fi
 
 case "${CMD}" in
@@ -50,15 +110,15 @@ case "${CMD}" in
     Deploy)
         log "Deploying drillbit configuration"
         DRILL_CMD=""
-        if [ -z "${DRILL_CLUSTER_ID}" ]
-        then
-            export DRILL_CLUSTER_ID=drill1
-        fi
-        if [ -z "${ZK_CONNECT}" ]
-        then
-            export ZK_CONNECT=${ZK_QUORUM}
-        fi
-        cat 
+        
+        . ${DRILL_HOME}/bin/drill-config.sh
+
+        parseConf
+
+        cat ${PROCESS_DIR}/aux/drill-override.conf | envsubst >| ${DRILL_CONF_DIR}/drill-override.conf
+        log "New configuration file: "
+        cat ${DRILL_CONF_DIR}/drill-override.conf
+        exit 0 
         ;;
         
     *)
@@ -74,4 +134,3 @@ if [ ! -z "${DRILL_CMD}" ]
 then
   . ${DRILL_HOME}/bin/drillbit_cdh.sh ${DRILL_CMD}
 fi
-
