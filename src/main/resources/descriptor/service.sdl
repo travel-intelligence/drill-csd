@@ -1,0 +1,209 @@
+{
+    "name": "DRILL",
+    "label": "Drill",
+    "description": "The Apache Drill service",
+    "version": 1,
+    "runAs": {
+        "user": "root",
+        "group": "root"
+    },
+    "maxInstances": 1,
+    "icon": "images/icon.png",
+    "parcel": {
+        "repoUrl": "http://172.16.4.108:8900/",
+        "requiredTags": [ "cdh", "drill" ]
+    },
+    "serviceDependencies": [
+        {
+            "name": "ZOOKEEPER",
+            "required": true
+        },
+        {
+            "name": "HDFS",
+            "required": true
+        }
+    ], 
+    "commands" : [
+        {
+            "name" : "deploy",
+            "label" : "Deploy",
+            "description" : "Deploy Drill configuration",
+            "roleName" : "DRILLBIT",
+            "roleCommand" : "deploy",
+            "runMode" : "all"
+        }
+    ],
+    "parameters": [
+        {
+            "name": "cluster_id",
+            "label": "Drill Cluster ID",
+            "description": "The identity string of the Drill instance",
+            "configName": "cluster.id",
+            "required": "true",
+            "type": "string",
+            "default": "drill"
+        },
+        {
+            "name": "zk_connect",
+            "label": "Zookeeper Quorum URL",
+            "description": "Zookeeper Quorum URL",
+            "configName": "zk.connect",
+            "required": "true",
+            "type": "string",
+            "default": "localhost:2181"
+        },
+        {
+            "name": "drill_max_direct_memory",
+            "label": "Drill Max Direct Memory",
+            "description": "Drill Max Direct Memory",
+            "configName": "drill.max.direct.memory",
+            "required": "false",
+            "type": "string",
+            "default": "8G"
+        },
+        {
+            "name": "drill_heap",
+            "label": "Drill Heap",
+            "description": "Drill Heap Size",
+            "configName": "drill.heap",
+            "required": "false",
+            "type": "string",
+            "default": "4G"
+        },
+        {
+            "name": "drill_log_dir",
+            "label": "Drill Log Dir",
+            "description": "Drill Logging Directory",
+            "configName": "drill.log.dir",
+            "required": "false",
+            "type": "string",
+            "default": "/var/log/drill"
+        }
+    ],
+    "rolesWithExternalLinks": [ "DRILLBIT" ],
+    "roles": [
+        {
+            "name": "DRILLBIT",
+            "label": "Drillbit",
+            "pluralLabel": "Drillbits",
+            "jvmBased": "true",
+            "startRunner": {
+                "program": "scripts/control.sh",
+                "args": [ "Start" ]
+            },
+            "stopRunner": {
+                "program": "scripts/control.sh",
+                "args": [ "Stop" ]
+            },
+            "commands": [
+                {
+                    "name": "start",
+                    "label": "Start drillbit",
+                    "description": "Start drillbit",
+                    "expectedExitCodes": [ 0 ],
+                    "requiredRoleState": "stopped",
+                    "commandRunner": {
+                        "program": "scripts/control.sh",
+                        "args": [ "Start" ]
+                    }
+                },
+                {
+                    "name": "stop",
+                    "label": "Stop drillbit",
+                    "description": "Stop drillbit",
+                    "expectedExitCodes": [ 0 ],
+                    "requiredRoleState": "running",
+                    "commandRunner": {
+                        "program": "scripts/control.sh",
+                        "args": [ "Stop" ]
+                    }
+                },
+                {
+                    "name": "restart",
+                    "label": "Restart drillbit",
+                    "description": "Restart drillbit",
+                    "expectedExitCodes": [ 0 ],
+                    "requiredRoleState": "running",
+                    "commandRunner": {
+                        "program": "scripts/control.sh",
+                        "args": [ "Restart" ]
+                    }
+                },
+                {
+                    "name": "status",
+                    "label": "Status of drillbit",
+                    "description": "Status of drillbit",
+                    "expectedExitCodes": [ 0 ],
+                    "requiredRoleState": "running",
+                    "commandRunner": {
+                        "program": "scripts/control.sh",
+                        "args": [ "Status" ]
+                    }
+                },
+                {
+                    "name": "autorestart",
+                    "label": "Autorestart of drillbit",
+                    "description": "Autorestart of drillbit",
+                    "expectedExitCodes": [ 0 ],
+                    "requiredRoleState": "stopped",
+                    "commandRunner": {
+                        "program": "scripts/control.sh",
+                        "args": [ "Autorestart" ]
+                    }
+                },
+                {
+                    "name": "deploy",
+                    "label": "Deploy",
+                    "description": "Deploy Drill configuration",
+                    "expectedExitCodes": [ 0 ],
+                    "requiredRoleState": "stopped",
+                    "commandRunner": {
+                        "program": "scripts/control.sh",
+                        "args": [ "Deploy" ]
+                    }
+                }
+            ],
+            "externalLink": {
+                "name": "drill_ui",
+                "label": "Drill UI",
+                "url": "http://172.16.4.108:8900/tmp"
+            },
+            "logging" : {
+                "dir" : "/var/log/drill",
+                "filename" : "drillbit.log",
+                "configName" : "log.dir",
+                "modifiable" : true,
+                "loggingType" : "log4j"
+            },
+            "gateway" : {
+                "alternatives" : {
+                    "name" : "conf",
+                    "priority" : 50,
+                    "linkRoot" : "/etc/drill"
+                },
+                "scriptRunner" : {
+                    "program" : "scripts/control.sh",
+                    "args" : [
+                        "Deploy"
+                    ],
+                    "environmentVariables" : {
+                        "DRILL_CLUSTER_ID" : "${cluster_id}",
+                        "ZK_CONNECT" : "${zk_connect}"
+                    }
+                },
+                "configWriter" : {
+                    "generators" : [
+                        {
+                            "filename" : "drill-conf/drill-cloudera.conf",
+                            "configFormat" : "properties",
+                            "includedParams" : [
+                                "cluster_id",
+                                "zk_connect"
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
