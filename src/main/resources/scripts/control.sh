@@ -17,6 +17,7 @@ DRILL_CONTROL_SH_DEBUG=1
 if [ "${DRILL_CONTROL_SH_DEBUG}" = "1" ]
 then
     env | sort
+    pwd
 fi
 
 case "${CMD}" in
@@ -49,6 +50,15 @@ case "${CMD}" in
     Deploy)
         log "Deploying drillbit configuration"
         DRILL_CMD=""
+        if [ -z "${DRILL_CLUSTER_ID}" ]
+        then
+            export DRILL_CLUSTER_ID=drill1
+        fi
+        if [ -z "${ZK_CONNECT}" ]
+        then
+            export ZK_CONNECT=${ZK_QUORUM}
+        fi
+        cat 
         ;;
         
     *)
