@@ -163,6 +163,18 @@
                     }
                 }
             ],
+            "configWriter" : {
+                "generators" : [
+                    {
+                        "filename" : "drill-conf/drill-cloudera.conf",
+                        "configFormat" : "properties",
+                        "includedParams" : [
+                            "cluster_id",
+                            "zk_connect"
+                        ]
+                    }
+                ]
+            },
             "externalLink": {
                 "name": "drill_ui",
                 "label": "Drill UI",
