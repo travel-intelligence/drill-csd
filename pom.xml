@@ -5,6 +5,14 @@
   <version>0.29</version>
   <packaging>jar</packaging>
   <name>Apache Drill CSD</name>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments>A business-friendly OSS license</comments>
+    </license>
+  </licenses>
   
   <build>
       <plugins>
